@@ -6,7 +6,7 @@ import {
   updateMembership,
   deleteMembership,
   acceptInvitation,
-} from "../controllers/membership.Controllers.js";
+} from "../controllers/membership.Controller.js";
 
 export const membershipRoute = express.Router();
 
