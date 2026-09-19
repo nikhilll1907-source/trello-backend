@@ -3,7 +3,7 @@ export const getOrganizationInviteHtml = (
   inviterName,
   membershipId
 ) => {
-  const inviteUrl = `http://localhost:3000/invitations/accept/${membershipId}`;
+  const inviteUrl = `${process.env.FRONTEND_URL}/invitations/accept/${membershipId}`;
 
   return `
     <!DOCTYPE html>
