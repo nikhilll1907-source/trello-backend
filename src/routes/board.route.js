@@ -5,7 +5,7 @@ import {
   getBoardById,
   updateBoard,
   deleteBoard,
-} from "../controllers/board.controller.js";
+} from "../controllers/board.Controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 
 export const boardRouter = express.Router();
