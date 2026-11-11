@@ -1,36 +1,37 @@
+import { StateAnnotation } from "../graph/state.js";
+import { model } from "../services/llm.service.js";
 import {
-  END,
-  MessagesAnnotation,
-  START,
-  StateGraph,
-} from "@langchain/langgraph";
-import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { createBoardTools } from "../tools/board.tools.js";
-import { BOARD_ASSISTANT_SYSTEM_PROMPT } from "../prompts/boardAssistant.prompt.js";
-import { createLlm } from "../services/llm.service.js";
+  getBoardDetailsTool,
+  getBoardSummaryTool,
+} from "../tools/board.tools.js";
+import {
+  getBoardSectionsTool,
+  getSectionDetailsTool,
+  getSectionIssuesTool,
+} from "../tools/section.tools.js";
+import { getIssuesTool, searchIssuesTool } from "../tools/issue.tools.js";
+import {
+  getIssueCommentsTool,
+  searchBoardCommentsTool,
+} from "../tools/comment.tools.js";
 
-export const createBoardAgent = ({ userId, llm } = {}) => {
-  const model = llm ?? createLlm();
-  const tools = createBoardTools({ userId, llm: model });
-  const modelWithTools = model.bindTools(tools);
+const readOnlyTools = [
+  getBoardDetailsTool,
+  getBoardSummaryTool,
+  getBoardSectionsTool,
+  getSectionDetailsTool,
+  getSectionIssuesTool,
+  getIssuesTool,
+  searchIssuesTool,
+  getIssueCommentsTool,
+  searchBoardCommentsTool,
+];
 
-  const callModel = async (state) => ({
-    messages: [
-      await modelWithTools.invoke([
-        { role: "system", content: BOARD_ASSISTANT_SYSTEM_PROMPT },
-        ...state.messages,
-      ]),
-    ],
-  });
+export const tools = readOnlyTools;
+export const toolEnabledModel = model.bindTools(readOnlyTools);
 
-  const routeAfterModel = (state) =>
-    state.messages.at(-1)?.tool_calls?.length ? "tools" : END;
-
-  return new StateGraph(MessagesAnnotation)
-    .addNode("agent", callModel)
-    .addNode("tools", new ToolNode(tools))
-    .addEdge(START, "agent")
-    .addConditionalEdges("agent", routeAfterModel, ["tools", END])
-    .addEdge("tools", "agent")
-    .compile();
-};
+export const boardAgent = Object.freeze({
+  model: toolEnabledModel,
+  state: StateAnnotation,
+  tools: readOnlyTools,
+});

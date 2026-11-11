@@ -9,6 +9,7 @@ import { boardRouter } from "./routes/board.route.js";
 import { sectionRoute } from "./routes/section.route.js";
 import { issueRoute } from "./routes/issue.route.js";
 import { commentRoute } from "./routes/comment.route.js";
+import { aiRouter } from "./routes/ai.routes.js";
 
 const app = express();
 
@@ -64,5 +65,6 @@ app.use("/api/boards", boardRouter);
 app.use("/api/sections", sectionRoute);
 app.use("/api/issues", issueRoute);
 app.use("/api/comments", commentRoute);
+app.use("/api/ai", aiRouter);
 
 export default app;
