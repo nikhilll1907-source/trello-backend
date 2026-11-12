@@ -1,4 +1,7 @@
-import { chatWithBoard as chatWithBoardUseCase } from "../ai/services/boardChat.service.js";
+import {
+  chatWithBoard as chatWithBoardUseCase,
+  getBoardConversation as getBoardConversationUseCase,
+} from "../ai/services/boardChat.service.js";
 import { respondToUseCaseError } from "./controllerError.js";
 
 const MAX_MESSAGE_LENGTH = 4000;
@@ -35,5 +38,26 @@ export const chatWithBoard = async (req, res) => {
     return respondToUseCaseError(res, error, "Failed to process AI chat", {
       includeSuccess: true,
     });
+  }
+};
+
+export const getBoardConversation = async (req, res) => {
+  try {
+    const messages = await getBoardConversationUseCase({
+      userId: req.userId,
+      boardId: req.params.boardId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      messages,
+    });
+  } catch (error) {
+    return respondToUseCaseError(
+      res,
+      error,
+      "Failed to retrieve AI conversation",
+      { includeSuccess: true }
+    );
   }
 };
