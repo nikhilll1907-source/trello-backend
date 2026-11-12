@@ -2,6 +2,7 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { getSectionIssues } from "../../usecases/issue.usecase.js";
 import { getBoardSections } from "../../usecases/section.usecase.js";
+import { enrichIssueCreators } from "./userName.helper.js";
 
 const getTrustedBoardContext = (runtime) => {
   const { userId, boardId, organizationId } = runtime?.context ?? {};
@@ -31,7 +32,7 @@ const getCurrentBoardIssues = async (runtime) => {
 export const getIssuesTool = tool(
   async (_input, runtime) => {
     const issues = await getCurrentBoardIssues(runtime);
-    return JSON.stringify(issues);
+    return JSON.stringify(await enrichIssueCreators(issues));
   },
   {
     name: "get_board_issues",
@@ -51,7 +52,7 @@ export const searchIssuesTool = tool(
       )
     );
 
-    return JSON.stringify(matchingIssues);
+    return JSON.stringify(await enrichIssueCreators(matchingIssues));
   },
   {
     name: "search_board_issues",

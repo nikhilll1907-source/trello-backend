@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getIssue, getSectionIssues } from "../../usecases/issue.usecase.js";
 import { getIssueComments } from "../../usecases/comment.usecase.js";
 import { getBoardSections } from "../../usecases/section.usecase.js";
+import { enrichCommentAuthors } from "./userName.helper.js";
 
 const getTrustedBoardContext = (runtime) => {
   const { userId, boardId, organizationId } = runtime?.context ?? {};
@@ -20,7 +21,9 @@ const serializeComment = (comment) => ({
   _id: comment?._id ? comment._id.toString() : null,
   content: comment?.content ?? "",
   issueId: comment?.issueId ? comment.issueId.toString() : null,
-  userId: comment?.userId ? comment.userId.toString() : null,
+  author: {
+    name: comment?.author?.name || "Unknown user",
+  },
   createdAt: comment?.createdAt ? new Date(comment.createdAt).toISOString() : null,
   updatedAt: comment?.updatedAt ? new Date(comment.updatedAt).toISOString() : null,
 });
@@ -43,8 +46,9 @@ export const getIssueCommentsTool = tool(
     ensureCurrentBoardIssue(issue, boardId);
 
     const comments = await getIssueComments({ userId, issueId });
+    const enrichedComments = await enrichCommentAuthors(comments);
 
-    return JSON.stringify(comments.map(serializeComment));
+    return JSON.stringify(enrichedComments.map(serializeComment));
   },
   {
     name: "get_issue_comments",
@@ -77,10 +81,12 @@ export const searchBoardCommentsTool = tool(
         comment.content?.toLowerCase().includes(normalizedQuery)
       );
 
-      matchingComments.push(...filteredComments.map(serializeComment));
+      matchingComments.push(...filteredComments);
     }
 
-    return JSON.stringify(matchingComments);
+    const enrichedComments = await enrichCommentAuthors(matchingComments);
+
+    return JSON.stringify(enrichedComments.map(serializeComment));
   },
   {
     name: "search_board_comments",
