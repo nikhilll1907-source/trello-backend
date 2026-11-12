@@ -1,6 +1,7 @@
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, SystemMessage } from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { toolEnabledModel, tools } from "../agents/boardAgent.js";
+import { getBoardAssistantSystemPrompt } from "../prompts/boardAssistant.prompt.js";
 
 const baseToolNode = new ToolNode(tools, {
   handleToolErrors: true,
@@ -8,7 +9,13 @@ const baseToolNode = new ToolNode(tools, {
 
 export const agentNode = async (state) => {
   try {
-    const response = await toolEnabledModel.invoke(state.messages);
+    const systemMessage = new SystemMessage(
+      getBoardAssistantSystemPrompt(state.user?.name)
+    );
+    const response = await toolEnabledModel.invoke([
+      systemMessage,
+      ...state.messages,
+    ]);
     return {
       messages: [response],
     };
@@ -26,14 +33,5 @@ export const agentNode = async (state) => {
 };
 
 export const toolNode = async (state, config = {}) => {
-  const runtimeContext = {
-    userId: state?.userId,
-    boardId: state?.boardId,
-    organizationId: state?.organizationId,
-  };
-
-  return baseToolNode.invoke(state, {
-    ...config,
-    context: runtimeContext,
-  });
+  return baseToolNode.invoke(state, config);
 };

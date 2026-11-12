@@ -4,13 +4,15 @@ import { getSectionIssues } from "../../usecases/issue.usecase.js";
 import { getBoardSections } from "../../usecases/section.usecase.js";
 
 const getTrustedBoardContext = (runtime) => {
-  const { userId, boardId } = runtime?.context ?? {};
+  const { userId, boardId, organizationId } = runtime?.context ?? {};
 
-  if (!userId || !boardId) {
-    throw new Error("Authenticated user and current board context are required");
+  if (!userId || !boardId || !organizationId) {
+    throw new Error(
+      "Authenticated user, board, and organization context are required"
+    );
   }
 
-  return { userId, boardId };
+  return { userId, boardId, organizationId };
 };
 
 const getCurrentBoardIssues = async (runtime) => {

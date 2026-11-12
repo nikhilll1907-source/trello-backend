@@ -18,10 +18,35 @@ export const shouldContinue = (state) => {
   return END;
 };
 
-export const boardWorkflow = new StateGraph(StateAnnotation)
-  .addNode("agent", agentNode)
-  .addNode("tools", toolNode)
-  .addEdge(START, "agent")
-  .addConditionalEdges("agent", shouldContinue, ["tools", END])
-  .addEdge("tools", "agent")
-  .compile();
+export const createBoardWorkflow = (checkpointer) => {
+  if (!checkpointer) {
+    throw new Error(
+      "A checkpointer is required to create the board workflow"
+    );
+  }
+
+  return new StateGraph(StateAnnotation)
+    .addNode("agent", agentNode)
+    .addNode("tools", toolNode)
+    .addEdge(START, "agent")
+    .addConditionalEdges("agent", shouldContinue, ["tools", END])
+    .addEdge("tools", "agent")
+    .compile({ checkpointer });
+};
+
+export let boardWorkflow;
+
+export const initializeBoardWorkflow = (checkpointer) => {
+  if (boardWorkflow) {
+    return boardWorkflow;
+  }
+
+  if (!checkpointer) {
+    throw new Error(
+      "A checkpointer is required to initialize the board workflow"
+    );
+  }
+
+  boardWorkflow = createBoardWorkflow(checkpointer);
+  return boardWorkflow;
+};
