@@ -50,9 +50,17 @@ export const enrichIssueCreators = async (issues) => {
 
 export const enrichCommentAuthors = async (comments) => {
   const records = comments.map(toPlainObject);
+
+  console.log(
+    "Comment author references:",
+    records.map((comment) => comment.userId?.toString())
+  );
+
   const namesById = await resolveUserNames(
     records.map((comment) => comment.userId)
   );
+
+  console.log("Resolved author names:", [...namesById.entries()]);
 
   return records.map(({ userId, ...comment }) => ({
     ...comment,
