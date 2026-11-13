@@ -14,6 +14,7 @@ import {
   getIssueCommentsTool,
   searchBoardCommentsTool,
 } from "../tools/comment.tools.js";
+import { proposeAIActionTool } from "../tools/aiAction.tools.js";
 
 const readOnlyTools = [
   getBoardDetailsTool,
@@ -27,11 +28,11 @@ const readOnlyTools = [
   searchBoardCommentsTool,
 ];
 
-export const tools = readOnlyTools;
-export const toolEnabledModel = model.bindTools(readOnlyTools);
+export const tools = [...readOnlyTools, proposeAIActionTool];
+export const toolEnabledModel = model.bindTools(tools);
 
 export const boardAgent = Object.freeze({
   model: toolEnabledModel,
   state: StateAnnotation,
-  tools: readOnlyTools,
+  tools,
 });
