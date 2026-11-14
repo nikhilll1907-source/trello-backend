@@ -32,7 +32,10 @@ export const chatWithBoard = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: { message: response },
+      data: {
+        message: response.message,
+        proposalCreated: response.proposalCreated,
+      },
     });
   } catch (error) {
     return respondToUseCaseError(res, error, "Failed to process AI chat", {
