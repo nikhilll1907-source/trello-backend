@@ -6,9 +6,16 @@ import { getVerificationHtml } from "../services/getHtml/verification.html.js";
 import { getForgotPasswordHtml } from "../services/getHtml/forgotPassword.html.js";
 import { UseCaseError } from "./usecase.helpers.js";
 
-const createTokenPair = (userId) => ({
+export const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+const createTokenPair = (userId, rememberMe = false) => ({
   accessToken: jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "15m" }),
-  refreshToken: jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "7d" }),
+  refreshToken: jwt.sign(
+    { userId, rememberMe },
+    process.env.JWT_SECRET,
+    { expiresIn: REFRESH_TOKEN_TTL_MS / 1000 }
+  ),
+  rememberMe,
 });
 
 export const generateOtpCode = () =>
@@ -87,7 +94,11 @@ export const signup = async ({ name, email, password }) => {
   };
 };
 
-export const login = async ({ email, password }) => {
+export const login = async ({ email, password, rememberMe = false }) => {
+  if (typeof rememberMe !== "boolean") {
+    throw new UseCaseError("Remember me preference must be a boolean", 400);
+  }
+
   const user = await User.findOne({ email });
   if (!user) {
     throw new UseCaseError("User not found", 400);
@@ -103,7 +114,7 @@ export const login = async ({ email, password }) => {
   }
 
   return {
-    ...createTokenPair(user._id),
+    ...createTokenPair(user._id, rememberMe),
     user: {
       id: user._id,
       name: user.name,
@@ -119,7 +130,8 @@ export const getAccessToken = async ({ refreshToken }) => {
   }
 
   const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
-  const tokens = createTokenPair(decoded.userId);
+  const rememberMe = decoded.rememberMe === true;
+  const tokens = createTokenPair(decoded.userId, rememberMe);
   return tokens;
 };
 

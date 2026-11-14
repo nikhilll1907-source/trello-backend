@@ -8,20 +8,26 @@ import {
   signup as signupUseCase,
   verifyEmail as verifyEmailUseCase,
   verifyForgotPasswordOtp as verifyForgotPasswordOtpUseCase,
+  REFRESH_TOKEN_TTL_MS,
 } from "../usecases/auth.usecase.js";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-export const getCookieOptions = () => ({
+export const getCookieOptions = (rememberMe = false) => ({
   httpOnly: true,
   secure: isProduction,
   sameSite: isProduction ? "none" : "lax",
+  ...(rememberMe ? { maxAge: REFRESH_TOKEN_TTL_MS } : {}),
 });
 
 export const signup = async (req, res) => {
   try {
     const result = await signupUseCase(req.body);
-    res.cookie("refreshToken", result.refreshToken, getCookieOptions());
+    res.cookie(
+      "refreshToken",
+      result.refreshToken,
+      getCookieOptions(result.rememberMe)
+    );
 
     return res.status(201).json({
       message:
@@ -37,7 +43,11 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const result = await loginUseCase(req.body);
-    res.cookie("refreshToken", result.refreshToken, getCookieOptions());
+    res.cookie(
+      "refreshToken",
+      result.refreshToken,
+      getCookieOptions(result.rememberMe)
+    );
 
     return res.status(200).json({
       message: "Login successful",
@@ -63,7 +73,11 @@ export const getAccessToken = async (req, res) => {
     const result = await getAccessTokenUseCase({
       refreshToken: req.cookies?.refreshToken,
     });
-    res.cookie("refreshToken", result.refreshToken, getCookieOptions());
+    res.cookie(
+      "refreshToken",
+      result.refreshToken,
+      getCookieOptions(result.rememberMe)
+    );
     return res.status(200).json({ accessToken: result.accessToken });
   } catch (error) {
     return respondToUseCaseError(res, error, "Error getting access token");
